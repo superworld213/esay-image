@@ -1,61 +1,59 @@
-# 图片处理网页应用技术架构文档
-
-## 1. Architecture design
+## 1.Architecture design
 
 ```mermaid
 graph TD
-  A[用户浏览器] --> B[React前端应用]
-  B --> C[Express后端服务]
-  C --> D[文件系统存储]
-  C --> E[字体文件管理]
+  A[User Browser] --> B[Vue 3 Frontend Application]
+  B --> C[Vite Dev Server]
+  B --> D[Express Backend Server]
+  D --> E[Static File Service]
+  D --> F[Image Processing API]
   
-  subgraph "前端层"
+  subgraph "Frontend Layer"
     B
-    F[Fabric.js画布引擎]
-    G[Ant Design组件库]
-  end
-  
-  subgraph "后端层"
     C
-    H[Multer文件上传]
-    I[Sharp图片处理]
-    J[JSZip压缩功能]
   end
   
-  subgraph "存储层"
+  subgraph "Backend Layer"
     D
     E
+    F
   end
   
-  B --> F
-  B --> G
-  C --> H
-  C --> I
-  C --> J
+  subgraph "File System"
+    G[Background Images]
+    H[QR Code Images]
+    I[Font Files]
+  end
+  
+  E --> G
+  E --> H
+  E --> I
 ```
 
-## 2. Technology Description
+## 2.Technology Description
 
-* 前端：React\@18 + Vite\@4 + Ant Design\@5 + Fabric.js\@5
+* Frontend: Vue\@3 + Vite\@4 + Canvas API + File API
 
-* 后端：Express\@4 + Multer\@1.4 + Sharp\@0.32 + JSZip\@3.10
+* Backend: Express\@4 + Multer (file upload) + Sharp (image processing)
 
-* 开发工具：TypeScript\@5 + ESLint + Prettier
+* Development: Node.js\@18+ + npm
 
-* 包管理：cnpm（用户指定）
+## 3.Route definitions
 
-## 3. Route definitions
+| Route               | Purpose               |
+| ------------------- | --------------------- |
+| /                   | 主页面，包含文件上传和图片处理功能     |
+| /api/upload         | 文件上传接口，处理背景图片和二维码图片上传 |
+| /api/process        | 图片处理接口，执行Canvas合成操作   |
+| /api/download/:id   | 单张图片下载接口              |
+| /api/download/batch | 批量图片下载接口，返回ZIP文件      |
+| /assets/\*          | 静态资源服务，包括字体文件和示例图片    |
 
-| Route   | Purpose                  |
-| ------- | ------------------------ |
-| /       | 主编辑页面，包含画布、工具栏、图层面板等核心功能 |
-| /export | 导出设置页面（可选，也可以用模态框实现）     |
-
-## 4. API definitions
+## 4.API definitions
 
 ### 4.1 Core API
 
-图片上传接口
+文件上传接口
 
 ```
 POST /api/upload
@@ -63,239 +61,162 @@ POST /api/upload
 
 Request (multipart/form-data):
 
-| Param Name | Param Type | isRequired | Description |
-| ---------- | ---------- | ---------- | ----------- |
-| images     | File\[]    | true       | 上传的图片文件数组   |
-
-Response:
-
-| Param Name       | Param Type | Description |
-| ---------------- | ---------- | ----------- |
-| success          | boolean    | 上传是否成功      |
-| data             | object\[]  | 上传成功的图片信息数组 |
-| data\[].id       | string     | 图片唯一标识      |
-| data\[].url      | string     | 图片访问URL     |
-| data\[].filename | string     | 原始文件名       |
-| data\[].width    | number     | 图片宽度        |
-| data\[].height   | number     | 图片高度        |
-
-字体文件上传接口
-
-```
-POST /api/fonts/upload
-```
-
-Request (multipart/form-data):
-
-| Param Name | Param Type | isRequired | Description |
-| ---------- | ---------- | ---------- | ----------- |
-| font       | File       | true       | CSS字体文件     |
+| Param Name | Param Type | isRequired | Description    |
+| ---------- | ---------- | ---------- | -------------- |
+| background | File       | true       | 背景图片文件(bg.jpg) |
+| qrCodes    | File\[]    | true       | 二维码图片文件数组      |
 
 Response:
 
 | Param Name | Param Type | Description |
 | ---------- | ---------- | ----------- |
-| success    | boolean    | 上传是否成功      |
-| data       | object     | 字体信息        |
-| data.name  | string     | 字体名称        |
-| data.url   | string     | 字体文件URL     |
+| success    | boolean    | 上传状态        |
+| fileIds    | string\[]  | 上传文件的ID数组   |
+| message    | string     | 响应消息        |
 
-获取已安装字体列表
+Example Response:
+
+```json
+{
+  "success": true,
+  "fileIds": ["bg_123", "qr_456", "qr_789"],
+  "message": "文件上传成功"
+}
+```
+
+图片处理接口
 
 ```
-GET /api/fonts
-```
-
-Response:
-
-| Param Name   | Param Type | Description |
-| ------------ | ---------- | ----------- |
-| success      | boolean    | 请求是否成功      |
-| data         | object\[]  | 字体列表        |
-| data\[].name | string     | 字体名称        |
-| data\[].url  | string     | 字体文件URL     |
-
-图片导出接口
-
-```
-POST /api/export
+POST /api/process
 ```
 
 Request:
 
-| Param Name | Param Type | isRequired | Description         |
-| ---------- | ---------- | ---------- | ------------------- |
-| canvasData | string     | true       | 画布JSON数据            |
-| quality    | number     | false      | 导出质量 0.1-1.0，默认0.8  |
-| format     | string     | false      | 导出格式 png/jpeg，默认png |
-| batch      | boolean    | false      | 是否批量导出，默认false      |
+| Param Name   | Param Type | isRequired | Description     |
+| ------------ | ---------- | ---------- | --------------- |
+| backgroundId | string     | true       | 背景图片文件ID        |
+| qrCodeIds    | string\[]  | true       | 二维码图片文件ID数组     |
+| textConfig   | object     | true       | 文字配置(字体、大小、颜色等) |
 
 Response:
 
-| Param Name  | Param Type | Description  |
-| ----------- | ---------- | ------------ |
-| success     | boolean    | 导出是否成功       |
-| data        | object     | 导出结果         |
-| data.url    | string     | 单张导出时的图片URL  |
-| data.zipUrl | string     | 批量导出时的压缩包URL |
+| Param Name     | Param Type | Description |
+| -------------- | ---------- | ----------- |
+| success        | boolean    | 处理状态        |
+| results        | object\[]  | 处理结果数组      |
+| processedCount | number     | 成功处理的图片数量   |
 
-## 5. Server architecture diagram
+Example Request:
+
+```json
+{
+  "backgroundId": "bg_123",
+  "qrCodeIds": ["qr_456", "qr_789"],
+  "textConfig": {
+    "fontFamily": "CustomFont",
+    "fontSize": 48,
+    "color": "#000000",
+    "strokeColor": "#ffffff",
+    "strokeWidth": 4
+  }
+}
+```
+
+## 5.Server architecture diagram
 
 ```mermaid
 graph TD
-  A[客户端请求] --> B[Express路由层]
-  B --> C[控制器层]
-  C --> D[服务层]
-  D --> E[文件系统层]
+  A[Client Request] --> B[Express Router]
+  B --> C[Upload Controller]
+  B --> D[Process Controller]
+  B --> E[Download Controller]
   
-  subgraph 服务器
+  C --> F[Multer Middleware]
+  F --> G[File Storage Service]
+  
+  D --> H[Canvas Processing Service]
+  H --> I[Image Composition Service]
+  I --> J[Text Rendering Service]
+  
+  E --> K[File Response Service]
+  
+  subgraph "Express Server"
     B
     C
     D
-    F[中间件层]
+    E
   end
   
-  F --> B
-  
-  subgraph 中间件
-    G[CORS中间件]
-    H[文件上传中间件]
-    I[错误处理中间件]
+  subgraph "Service Layer"
+    F
+    G
+    H
+    I
+    J
+    K
   end
-  
-  F --> G
-  F --> H
-  F --> I
 ```
 
-## 6. Data model
+## 6.Data model
 
 ### 6.1 Data model definition
 
 ```mermaid
 erDiagram
-  IMAGE ||--o{ LAYER : contains
-  CANVAS ||--o{ LAYER : has
-  FONT ||--o{ TEXT_LAYER : uses
+  FILE_UPLOAD ||--o{ PROCESSING_JOB : contains
+  PROCESSING_JOB ||--o{ PROCESSED_IMAGE : generates
   
-  IMAGE {
+  FILE_UPLOAD {
     string id PK
     string filename
-    string url
-    number width
-    number height
-    string mimetype
+    string originalName
+    string mimeType
+    number size
+    string path
     datetime uploadTime
   }
   
-  LAYER {
+  PROCESSING_JOB {
     string id PK
-    string canvasId FK
-    string type
-    number zIndex
-    object transform
-    boolean visible
-    datetime createdTime
+    string backgroundFileId FK
+    string qrCodeFileIds
+    object textConfig
+    string status
+    datetime createdAt
+    datetime completedAt
   }
   
-  CANVAS {
+  PROCESSED_IMAGE {
     string id PK
-    number width
-    number height
-    object backgroundColor
-    datetime lastModified
-  }
-  
-  FONT {
-    string id PK
-    string name
-    string filename
-    string url
-    datetime uploadTime
-  }
-  
-  TEXT_LAYER {
-    string id PK
-    string layerId FK
-    string fontId FK
-    string content
-    number fontSize
-    string color
+    string jobId FK
+    string originalQrName
+    string processedImagePath
+    string downloadUrl
+    datetime createdAt
   }
 ```
 
 ### 6.2 Data Definition Language
 
-由于使用文件系统存储，不需要传统数据库DDL。数据结构以JSON格式存储：
+由于这是一个轻量级的图片处理工具，我们使用文件系统存储而不是数据库。文件组织结构如下：
 
-图片信息存储结构
-
-```json
-{
-  "id": "img_1234567890",
-  "filename": "example.jpg",
-  "url": "/uploads/images/img_1234567890.jpg",
-  "width": 1920,
-  "height": 1080,
-  "mimetype": "image/jpeg",
-  "uploadTime": "2024-01-01T00:00:00.000Z"
-}
+```
+project/
+├── uploads/           # 上传文件存储目录
+│   ├── backgrounds/   # 背景图片
+│   └── qrcodes/      # 二维码图片
+├── processed/        # 处理后图片存储目录
+├── temp/            # 临时文件目录
+└── assets/          # 静态资源
+    ├── fonts/       # 字体文件
+    └── samples/     # 示例图片
 ```
 
-画布数据存储结构
+文件命名规则：
 
-```json
-{
-  "id": "canvas_1234567890",
-  "width": 800,
-  "height": 600,
-  "backgroundColor": "#ffffff",
-  "layers": [
-    {
-      "id": "layer_1234567890",
-      "type": "image",
-      "zIndex": 1,
-      "imageId": "img_1234567890",
-      "transform": {
-        "x": 100,
-        "y": 100,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0
-      },
-      "visible": true
-    },
-    {
-      "id": "layer_1234567891",
-      "type": "text",
-      "zIndex": 2,
-      "content": "示例文字",
-      "fontFamily": "Arial",
-      "fontSize": 24,
-      "color": "#000000",
-      "transform": {
-        "x": 200,
-        "y": 200,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0
-      },
-      "visible": true
-    }
-  ],
-  "lastModified": "2024-01-01T00:00:00.000Z"
-}
-```
+* 上传文件：`{timestamp}_{originalName}`
 
-字体信息存储结构
+* 处理后文件：`{jobId}_{qrName}_processed.jpg`
 
-```json
-{
-  "id": "font_1234567890",
-  "name": "CustomFont",
-  "filename": "custom-font.woff2",
-  "url": "/uploads/fonts/font_1234567890.woff2",
-  "uploadTime": "2024-01-01T00:00:00.000Z"
-}
-```
+* 临时文件：`{uuid}_temp.{ext}`
 
