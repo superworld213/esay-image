@@ -1,0 +1,132 @@
+.main-editor {
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 左侧工具栏样式 */
+.toolbar-sider {
+  background: #001529 !important;
+  border-right: 1px solid #d9d9d9;
+}
+
+/* 中央画布区域样式 */
+.canvas-content {
+  background: #ffffff;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* 右侧面板样式 */
+.right-panel {
+  background: #ffffff !important;
+  border-left: 1px solid #d9d9d9;
+}
+
+.panel-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 图层面板区域 */
+.layer-panel-section {
+  flex: 1;
+  border-bottom: 1px solid #d9d9d9;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* 属性面板区域 */
+.property-panel-section {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .main-editor {
+    min-width: 1200px;
+  }
+}
+
+/* 画布容器样式 */
+.canvas-container {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 选中元素边框样式 */
+.fabric-object-selected {
+  border-color: #1890ff !important;
+}
+
+/* 工具栏按钮样式 */
+.toolbar-button {
+  width: 48px;
+  height: 48px;
+  margin: 8px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.toolbar-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toolbar-button.active {
+  background: #1890ff;
+}
+
+/* 图层项样式 */
+.layer-item {
+  padding: 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #ffffff;
+}
+
+.layer-item:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+}
+
+.layer-item.selected {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+.layer-thumbnail {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-right: 8px;
+}
+
+.layer-info {
+  flex: 1;
+}
+
+.layer-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.layer-type {
+  font-size: 12px;
+  color: #666;
+}
