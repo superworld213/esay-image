@@ -52,14 +52,14 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB
+    fileSize: 100 * 1024 * 1024 // 10MB
   }
 });
 
 // 文件上传接口
 router.post('/', upload.fields([
   { name: 'background', maxCount: 1 },
-  { name: 'qrCodes', maxCount: 100 }
+  { name: 'qrCodes', maxCount: 1000 }
 ]), (req: Request, res: Response) => {
   try {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };

@@ -49,6 +49,7 @@ const translateToEnglish = (chineseText: string): string => {
     '八住': 'EIGHT INPATIENT UNITS',
     '九住': 'NINE INPATIENT UNITS',
     '十住': 'TEN INPATIENT UNITS',
+    '治未病': 'TREAT THE DISEASE',
     '床': 'BED',
     'F': 'F'
   }
