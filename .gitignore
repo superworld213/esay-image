@@ -24,7 +24,12 @@ dist-ssr
 *.sw?
 .vite
 
-# Project specific directories
-processed/
-uploads/backgrounds/
-uploads/qrcodes/
+# File upload directories
+processed/*
+uploads/backgrounds/*
+uploads/qrcodes/*
+
+# Keep folder structure
+!processed/.gitkeep
+!uploads/backgrounds/.gitkeep
+!uploads/qrcodes/.gitkeep
